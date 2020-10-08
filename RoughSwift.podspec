@@ -11,22 +11,13 @@ Pod::Spec.new do |s|
   }
   s.social_media_url = 'https://twitter.com/onmyway133'
 
-  s.ios.deployment_target = '9.0'
-  # s.osx.deployment_target = '10.9'
-  # s.tvos.deployment_target = '9.2'
-  # s.watchos.deployment_target = "3.0"
-
   s.requires_arc = true
-  s.ios.source_files = 'Sources/{Shared,iOS}/**/*'
-  s.resources  = 'Sources/Shared/*.js'
+  s.resources  = 'Sources/rough.js'
+  s.source_files = 'Sources/**/*.swift'
+  s.frameworks = 'JavascriptCore', 'QuartzCore'
 
-  # s.tvos.source_files = 'Sources/{iOS,tvOS,Shared}/**/*'
-  # s.osx.source_files = 'Sources/{macOS,Shared}/**/*'
-  # s.watchos.source_files = 'Sources/{watchOS,Shared}/**/*'
-
-  s.ios.frameworks = 'UIKit', 'JavascriptCore'
-  # s.osx.frameworks = 'Cocoa', 'Foundation'
-  # s.watchos.exclude_files = ["Sources/AnimatedImageView.swift"] 
-
-  s.pod_target_xcconfig = { 'SWIFT_VERSION' => '4.2' }
+  s.ios.deployment_target = '9.0'
+  s.osx.deployment_target = '10.9'
+  s.tvos.deployment_target = '9.2'
+  s.watchos.deployment_target = "3.0"
 end

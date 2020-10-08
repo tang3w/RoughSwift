@@ -6,7 +6,7 @@
 //  Copyright © 2019 Khoa Pham. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 /// Convert Drawable to UIBezierPath and add to CAShapeLayer
 public class Renderer {
@@ -33,13 +33,13 @@ public class Renderer {
   
   private func shapeLayer(set: OperationSet, options: Options) -> CAShapeLayer {
     let layer = CAShapeLayer()
-    let path = UIBezierPath()
+    let path = CGMutablePath()
     layer.fillColor = nil
     
     switch set.type {
     case .path:
-      path.lineWidth = CGFloat(options.strokeWidth)
       layer.strokeColor = options.stroke.cgColor
+      layer.lineWidth = CGFloat(options.strokeWidth)
     case .fillSketch:
       fillSketch(path: path, layer: layer, options: options)
     case .fillPath:
@@ -55,18 +55,18 @@ public class Renderer {
       operate(op: op, path: path)
     }
     
-    layer.path = path.cgPath
+    layer.path = path
     return layer
   }
   
   /// Sketch style fill, using many stroke paths
-  private func fillSketch(path: UIBezierPath, layer: CAShapeLayer, options: Options) {
+  private func fillSketch(path: CGMutablePath, layer: CAShapeLayer, options: Options) {
     var fweight = options.fillWeight
     if (fweight < 0) {
       fweight = options.strokeWidth / 2
     }
     
-    path.lineWidth = CGFloat(fweight)
+    layer.lineWidth = CGFloat(fweight)
     layer.strokeColor = options.fill.cgColor
   }
   
@@ -75,7 +75,7 @@ public class Renderer {
     layer.fillColor = options.fill.cgColor
   }
   
-  private func operate(op: Operation, path: UIBezierPath) {
+  private func operate(op: Operation, path: CGMutablePath) {
     switch op {
     case let op as Move:
       path.move(to: op.point.toCGPoint())
@@ -84,13 +84,15 @@ public class Renderer {
     case let op as BezierCurveTo:
       path.addCurve(
         to: op.point.toCGPoint(),
-        controlPoint1: op.controlPoint1.toCGPoint(),
-        controlPoint2: op.controlPoint2.toCGPoint()
+        control1: op.controlPoint1.toCGPoint(),
+        control2: op.controlPoint2.toCGPoint(),
+        transform: .identity
       )
     case let op as QuadraticCurveTo:
       path.addQuadCurve(
         to: op.point.toCGPoint(),
-        controlPoint: op.controlPoint.toCGPoint()
+        control: op.controlPoint.toCGPoint(),
+        transform: .identity
       )
     default:
       break
@@ -108,7 +110,7 @@ public class Renderer {
     
     // Apply mask
     let maskLayer = CAShapeLayer()
-    maskLayer.path = UIBezierPath(svgPath: pair.0.path!).cgPath
+    maskLayer.path = CGPath.from(svgPath: pair.0.path!)
     scalePathToFrame(shapeLayer: maskLayer)
     fillLayer.mask = maskLayer
   
@@ -135,9 +137,7 @@ public class Renderer {
         height: max(layer.frame.size.height, 1)
     )
 
-    let bezierPath = UIBezierPath(cgPath: path)
-    _ = bezierPath.fit(into: rect).moveCenter(to: rect.center)
-    shapeLayer.path = bezierPath.cgPath
+    shapeLayer.path = path.fit(into: rect).moveCenter(to: rect.center)
   }
 }
 
@@ -161,26 +161,24 @@ extension CGPoint {
     }
 }
 
-extension UIBezierPath {
-    func moveCenter(to:CGPoint) -> Self {
-        let bounds = self.cgPath.boundingBox
+extension CGPath {
+    func moveCenter(to:CGPoint) -> CGPath {
+        let bounds = boundingBox
         let center = bounds.center
 
         let zeroedTo = CGPoint(x: to.x - bounds.origin.x, y: to.y - bounds.origin.y)
         let vector = center.vector(to: zeroedTo)
 
-        _ = offset(to: CGSize(width: vector.dx, height: vector.dy))
-        return self
+        return offset(to: CGSize(width: vector.dx, height: vector.dy))
     }
 
-    func offset(to offset:CGSize) -> Self {
+    func offset(to offset:CGSize) -> CGPath {
         let t = CGAffineTransform(translationX: offset.width, y: offset.height)
-        _ = applyCentered(transform: t)
-        return self
+        return applyCentered(transform: t)
     }
 
-    func fit(into:CGRect) -> Self {
-        let bounds = self.cgPath.boundingBox
+    func fit(into:CGRect) -> CGPath {
+        let bounds = boundingBox
 
         let sw     = into.size.width/bounds.width
         let sh     = into.size.height/bounds.height
@@ -189,23 +187,24 @@ extension UIBezierPath {
         return scale(x: factor, y: factor)
     }
 
-    func scale(x:CGFloat, y:CGFloat) -> Self{
+    func scale(x:CGFloat, y:CGFloat) -> CGPath {
         let scale = CGAffineTransform(scaleX: x, y: y)
-        _ = applyCentered(transform: scale)
-        return self
+        return applyCentered(transform: scale)
     }
 
-
-    func applyCentered(transform: @autoclosure () -> CGAffineTransform ) -> Self{
-        let bound  = self.cgPath.boundingBox
+    func applyCentered(transform: @autoclosure () -> CGAffineTransform ) -> CGPath {
+        let bound  = boundingBox
         let center = CGPoint(x: bound.midX, y: bound.midY)
         var xform  = CGAffineTransform.identity
 
         xform = xform.concatenating(CGAffineTransform(translationX: -center.x, y: -center.y))
         xform = xform.concatenating(transform())
         xform = xform.concatenating(CGAffineTransform(translationX: center.x, y: center.y))
-        apply(xform)
+      
+        guard let path = copy(using: &xform) else {
+            fatalError("Couldn't transform path")
+        }
 
-        return self
+        return path
     }
 }

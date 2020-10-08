@@ -6,14 +6,14 @@
 //  Copyright © 2019 Khoa Pham. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 public struct Options {
   public var maxRandomnessOffset: Float = 2
   public var roughness: Float = 1
   public var bowing: Float = 1
-  public var fill: UIColor = .clear
-  public var stroke: UIColor = .black
+  public var fill: Color = .clear
+  public var stroke: Color = .black
   public var strokeWidth: Float = 1
   public var curveTightness: Float = 0
   public var curveStepCount: Float = 9
@@ -67,8 +67,8 @@ public struct Options {
       options.fillStyle = fillStyle
     }
     
-    options.stroke <-? (dictionary["stroke"] as? String).map(UIColor.init(hex:))
-    options.fill <-? (dictionary["fill"] as? String).map(UIColor.init(hex:))
+    options.stroke <-? ((dictionary["stroke"] as? String).map(Color.init(hex:)) as? Color)
+    options.fill <-? ((dictionary["fill"] as? String).map(Color.init(hex:)) as? Color)
     
     return options
   }

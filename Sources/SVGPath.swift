@@ -7,27 +7,24 @@
 //  Copyright (c) 2015 Tim Wood. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import CoreGraphics
 
-// MARK: UIBezierPath
-
-public extension UIBezierPath {
-    convenience init (svgPath: String) {
-        self.init()
-        applyCommands(from: SVGPath(svgPath))
+extension CGPath {
+    static func from(svgPath: String) -> CGPath {
+        let path = CGMutablePath()
+        applyCommands(from: SVGPath(svgPath), to: path)
+        return path
     }
-}
-
-private extension UIBezierPath {
-    func applyCommands(from svgPath: SVGPath) {
+    
+    private static func applyCommands(from svgPath: SVGPath, to path: CGMutablePath) {
         for command in svgPath.commands {
             switch command.type {
-            case .move: move(to: command.point)
-            case .line: addLine(to: command.point)
-            case .quadCurve: addQuadCurve(to: command.point, controlPoint: command.control1)
-            case .cubeCurve: addCurve(to: command.point, controlPoint1: command.control1, controlPoint2: command.control2)
-            case .close: close()
+            case .move: path.move(to: command.point)
+            case .line: path.addLine(to: command.point)
+            case .quadCurve: path.addQuadCurve(to: command.point, control: command.control1)
+            case .cubeCurve: path.addCurve(to: command.point, control1: command.control1, control2: command.control2)
+            case .close: path.closeSubpath()
             }
         }
     }

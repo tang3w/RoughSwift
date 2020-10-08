@@ -6,7 +6,7 @@
 //  Copyright © 2019 Khoa Pham. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 /// Conveniently to draw and get rendered layer
 /// This sets up the whole stack, you just need to specify shapes to draw

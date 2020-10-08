@@ -6,15 +6,27 @@
 //  Copyright © 2019 Khoa Pham. All rights reserved.
 //
 
+#if canImport(UIKit)
+
 import UIKit
 
-extension UIColor {
+public typealias Color = UIColor
+
+#elseif canImport(AppKit)
+
+import AppKit
+
+public typealias Color = NSColor
+
+#endif
+
+extension Color {
   /// Constructing color from hex string
   ///
   /// - Parameter hex: A hex string, can either contain # or not
-  convenience init(hex string: String) {
+  convenience init?(hex string: String) {
     if string == "none" {
-      self.init(cgColor: UIColor.clear.cgColor)
+      self.init(cgColor: Color.clear.cgColor)
       return
     }
     
@@ -51,13 +63,25 @@ extension UIColor {
     
     let multiplier = CGFloat(255.999999)
     
-    guard !self.isEqual(UIColor.clear) else {
+    guard !self.isEqual(Color.clear) else {
       return "none"
     }
+    
+    #if canImport(UIKit)
     
     guard self.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
       return "none"
     }
+    
+    #elseif canImport(AppKit)
+    
+    guard let color = usingColorSpace(.sRGB) else {
+        return "none"
+    }
+    
+    color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+    
+    #endif
     
     if alpha == 1.0 {
       return String(

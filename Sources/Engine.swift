@@ -6,7 +6,7 @@
 //  Copyright © 2019 Khoa Pham. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import JavaScriptCore
 
 public typealias JSONDictionary = [String: Any]
